@@ -5,16 +5,14 @@ import joblib
 import os
 import time
 
-# Nama file tempat model dan scaler disimpan
-MODEL_FILE = "file/c45_model.pkl"
-SCALER_FILE = "file/scaler.pkl"
+# Nama file tempat model dan metadata disimpan
+MODEL_SAVE_FILE = "file/model_and_scaler_data.pkl"
 
 def get_form_values():
     """
     Fungsi untuk mendapatkan nilai input formulir dari session state.
     Jika belum ada, gunakan nilai default.
     """
-    # Mengambil nilai dari session_state, atau nilai default jika belum ada
     co = st.session_state.get('last_co', 0.5)
     pm10 = st.session_state.get('last_pm10', 50.0)
     no2 = st.session_state.get('last_no2', 20.0)
@@ -33,41 +31,36 @@ def show():
     </div>
     """, unsafe_allow_html=True)
     
-    # --- LOGIKA PERBAIKAN: Muat model dan scaler jika belum ada di session state ---
-    model = None
-    scaler = None
+    # --- PENTING: Pemuatan model dari file tunggal ---
     
-    # Nama-nama fitur yang benar sesuai data pelatihan Anda
-    feature_names = ['CO (ppm)', 'PM10 (µg/m3)', 'NO2 (ppb)', 'Suhu (°C)', 'Kelembaban (%)', 'Kecepatan Angin (m/s)']
-    # Nama-nama kelas hasil prediksi
-    class_names = ['Baik', 'Sedang', 'Tidak Sehat', 'Sangat Tidak Sehat', 'Berbahaya']
-    
-    # Prioritas 1: Coba muat dari session state (paling cepat)
-    if 'model' in st.session_state and 'scaler' in st.session_state:
-        model = st.session_state.model
-        scaler = st.session_state.scaler
-        st.session_state.feature_names = feature_names # Memastikan nama fitur konsisten
-        st.session_state.class_names = class_names
-        
-    # Prioritas 2: Jika tidak ada di session state, coba muat dari file (fallback)
-    elif os.path.exists(MODEL_FILE) and os.path.exists(SCALER_FILE):
-        try:
-            model = joblib.load(MODEL_FILE)
-            scaler = joblib.load(SCALER_FILE)
-            st.session_state.model = model
-            st.session_state.scaler = scaler
-            # Simpan nama kelas dan fitur untuk konsistensi
-            st.session_state.class_names = class_names
-            st.session_state.feature_names = feature_names
-            st.success("✅ Model dan Scaler berhasil dimuat dari file. Anda bisa melakukan prediksi.")
-        except Exception as e:
-            st.error(f"❌ Terjadi kesalahan saat memuat model dari file: {e}")
-            return
-    else:
-        st.warning("⚠️ Model prediksi belum tersedia. Silakan latih model terlebih dahulu di halaman 'Penerapan Algoritma C4.5'.")
+    # Cek apakah file model_and_scaler_data.pkl sudah ada
+    if not os.path.exists(MODEL_SAVE_FILE):
+        st.warning("⚠️ Model prediksi belum tersedia. Silakan latih model terlebih dahulu di halaman **'Penerapan Algoritma C4.5'**.")
         return
-    # --- AKHIR LOGIKA PERBAIKAN ---
-    
+        
+    # Muat model dan scaler dari file
+    try:
+        with st.spinner("⏳ Memuat model dan scaler dari file..."):
+            model_data = joblib.load(MODEL_SAVE_FILE)
+            model = model_data.get('model')
+            scaler = model_data.get('scaler')
+            feature_names = model_data.get('feature_names')
+            class_names = model_data.get('class_names')
+        
+        # Periksa apakah data yang dimuat valid
+        if model is None or scaler is None or feature_names is None or class_names is None:
+            st.error("❌ File model tidak lengkap. Silakan latih model kembali.")
+            return
+
+        st.success("✅ Model dan Scaler berhasil dimuat dari file. Anda bisa melakukan prediksi.")
+        
+    except Exception as e:
+        st.error(f"❌ Terjadi kesalahan saat memuat model dari file: {e}")
+        st.warning("⚠️ Silakan latih model kembali di halaman **'Penerapan Algoritma C4.5'**.")
+        return
+        
+    # --- AKHIR LOGIKA PEMUATAN ---
+
     # Ambil nilai awal untuk form
     co_val, pm10_val, no2_val, suhu_val, kelembaban_val, kecepatan_angin_val = get_form_values()
     
@@ -78,7 +71,7 @@ def show():
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("**Polutan Udara**")
-            co = st.number_input("CO (ppm)", min_value=0.0, max_value=10.0, value=co_val, step=0.1, 
+            co = st.number_input("CO (ppm)", min_value=0.0, max_value=10.0, value=co_val, step=0.5, 
                                  help="Karbon Monoksida - Gas beracun dari pembakaran tidak sempurna")
             pm10 = st.number_input("PM10 (µg/m3)", min_value=0.0, max_value=200.0, value=pm10_val, step=5.0, 
                                    help="Partikel debu halus - Partikel udara berdiameter ≤10 mikrometer")
@@ -96,8 +89,8 @@ def show():
         
         submitted = st.form_submit_button("🔍 Prediksi Kualitas Udara", use_container_width=True)
         
-    if submitted and model is not None and scaler is not None:
-        # --- LOGIKA PERBAIKAN: Menyimpan nilai input ke session_state ---
+    if submitted:
+        # Menyimpan nilai input ke session_state agar tetap ada saat tombol ditekan
         st.session_state['last_co'] = co
         st.session_state['last_pm10'] = pm10
         st.session_state['last_no2'] = no2
@@ -105,13 +98,13 @@ def show():
         st.session_state['last_kelembaban'] = kelembaban
         st.session_state['last_kecepatan_angin'] = kecepatan_angin
         
-        # --- LOGIKA PERBAIKAN: Periksa apakah semua nilai input adalah nol ---
+        # Periksa apakah semua nilai input adalah nol
         input_values = [co, pm10, no2, suhu, kelembaban, kecepatan_angin]
         if all(v == 0 for v in input_values):
             st.error("Semua nilai tidak boleh 0. Silakan masukkan parameter yang valid untuk prediksi.")
-            return # Menghentikan eksekusi jika semua nilai adalah nol
+            return
         
-        # Buat dataframe input dengan nama kolom yang benar
+        # Buat dataframe input dengan nama kolom yang dimuat dari file
         input_data = pd.DataFrame([[co, pm10, no2, suhu, kelembaban, kecepatan_angin]], columns=feature_names) 
         
         # Normalize input menggunakan scaler yang sudah dimuat
@@ -135,10 +128,10 @@ def show():
         <div class="prediction-result {css_class}">
             <h2>Kualitas Udara: {prediction_label.upper()}</h2>
             <p>{ 'Kondisi udara sehat untuk semua aktivitas' if prediction_label == 'Baik' else 
-                         'Kelompok sensitif mungkin mengalami efek kesehatan' if prediction_label == 'Sedang' else
-                         'Semua kelompok mungkin mengalami efek kesehatan' if prediction_label == 'Tidak Sehat' else
-                         'Peringatan kesehatan darurat untuk seluruh populasi' if prediction_label == 'Sangat Tidak Sehat' else
-                         'Kondisi udara sangat berbahaya, evakuasi disarankan' if prediction_label == 'Berbahaya' else '' }
+                  'Kelompok sensitif mungkin mengalami efek kesehatan' if prediction_label == 'Sedang' else
+                  'Semua kelompok mungkin mengalami efek kesehatan' if prediction_label == 'Tidak Sehat' else
+                  'Peringatan kesehatan darurat untuk seluruh populasi' if prediction_label == 'Sangat Tidak Sehat' else
+                  'Kondisi udara sangat berbahaya, evakuasi disarankan' if prediction_label == 'Berbahaya' else '' }
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -154,7 +147,7 @@ def show():
             "Sedang": "<li>Kelompok sensitif (anak, lansia, penderita ISPA) batasi aktivitas luar</li><li>Masyarakat umum masih dapat beraktivitas normal</li><li>Pantau perkembangan kualitas udara secara berkala</li><li>Hindari area dengan polusi tinggi seperti jalan raya padat</li>",
             "Tidak Sehat": "<li>Hindari aktivitas fisik berat di luar ruangan</li><li>Kelompok sensitif tetap di dalam ruangan</li><li>Gunakan masker N95 jika harus keluar ruangan</li><li>Tutup jendela dan pintu untuk mengurangi paparan polusi</li><li>Cari sumber polusi dan lakukan upaya pengurangan</li>",
             "Sangat Tidak Sehat": "<li>Hindari semua aktivitas di luar ruangan</li><li>Tetap di dalam ruangan dengan ventilasi tertutup</li><li>Gunakan air purifier jika memungkinkan</li><li>Pantau informasi kualitas udara terbaru</li><li>Laporkan ke pihak berwenang untuk tindakan darurat</li>",
-            "Berbahaya": "<li>Jangan keluar ruangan dalam keadaan apapun</li><li>Gunakan alat bantu pernapasan jika tersedia</li><li>Segera cari tempat dengan udara bersih</li><li>Laporkan ke pihak berwenang untuk tindakan darurat</li><li>Evakuasi ke area dengan kualitas udara lebih baik</li>"
+            "Berbahaya": "<li>Jangan keluar ruangan dalam keadaan apapun</li><li>Gunakan alat bantu pernapasan jika tersedia</li><li>Segera cari tempat dengan udara bersih</li><li>Laporkan ke pihak berwenas untuk tindakan darurat</li><li>Evakuasi ke area dengan kualitas udara lebih baik</li>"
         }
         rec_title = "✅ Rekomendasi:" if prediction_label == "Baik" else "ℹ️ Rekomendasi:" if prediction_label == "Sedang" else "❗ Rekomendasi:" if prediction_label == "Tidak Sehat" else "🚨 Rekomendasi:" if prediction_label == "Sangat Tidak Sehat" else "🔥 Rekomendasi Darurat:"
 

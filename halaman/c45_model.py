@@ -16,9 +16,8 @@ import joblib
 import os
 import time
 
-# Nama file tempat model dan scaler akan disimpan
-MODEL_FILE = "file/c45_model.pkl"
-SCALER_FILE = "file/scaler.pkl"
+# Nama file tempat model, scaler, dan metadata akan disimpan
+MODEL_SAVE_FILE = "file/model_and_scaler_data.pkl"
 
 def get_tree_image(model, feature_names, class_names):
     """
@@ -78,7 +77,7 @@ def explain_tree_visual(class_names):
     st.markdown("""
     Pohon keputusan ini adalah "otak" dari model prediksi kita. Anda bisa membacanya seperti sebuah diagram alur sederhana:
     1.  **Mulai dari kotak paling atas.** Ini adalah pertanyaan pertama.
-    2.  **Jawab pertanyaannya.** Contoh: `CO (ppm) <= 0.25`.
+    2.  **Jawab pertanyaannya.** Contoh: `CO (ppm) ≤ 0.25`.
     3.  **Ikuti panah.** Jika jawabannya **"Ya" (True)**, ikuti panah ke kiri. Jika **"Tidak" (False)**, ikuti panah ke kanan.
     4.  **Lanjutkan sampai kotak terakhir.** Kotak ini tidak ada panah lagi dan di sanalah hasil prediksi Anda!
     """)
@@ -93,14 +92,14 @@ def explain_tree_visual(class_names):
         for name, color_name, color_hex in col1_items:
             st.markdown(f"""
             <div style="background-color:#{color_hex}1a; padding:10px; border-radius:5px; margin-bottom:10px; border-left: 4px solid #{color_hex};">
-                <p style="margin:0; color:#333;">🟢 {name}: <b>{color_name}</b></p>
+                <p style="margin:0; color:#333;">🟢 **{name}:** Udara <b>{color_name}</b></p>
             </div>
             """, unsafe_allow_html=True)
     with cols[1]:
         for name, color_name, color_hex in col2_items:
             st.markdown(f"""
             <div style="background-color:#{color_hex}1a; padding:10px; border-radius:5px; margin-bottom:10px; border-left: 4px solid #{color_hex};">
-                <p style="margin:0; color:#333;">🟢 {name}: <b>{color_name}</b></p>
+                <p style="margin:0; color:#333;">🟢 **{name}:** Udara <b>{color_name}</b></p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -187,27 +186,15 @@ def show():
     </div>
     """, unsafe_allow_html=True)
     
-    # Inisialisasi semua state yang dibutuhkan untuk menghindari AttributeError
-    if 'model' not in st.session_state:
-        st.session_state.model = None
-    if 'model_trained' not in st.session_state:
-        st.session_state.model_trained = False
-    if 'y_test' not in st.session_state:
-        st.session_state.y_test = None
-    if 'y_pred' not in st.session_state:
-        st.session_state.y_pred = None
-    if 'label_encoder' not in st.session_state:
-        st.session_state.label_encoder = None
-    if 'feature_names' not in st.session_state:
-        st.session_state.feature_names = None
-    if 'class_names' not in st.session_state:
-        st.session_state.class_names = None
-
-    # Periksa apakah data sudah diunggah
+    # --- PENTING: Periksa ketersediaan data sebelum memulai ---
     if 'normalized_data' not in st.session_state or st.session_state.normalized_data is None:
-        st.warning("⚠️ Silakan unggah dan normalisasi data terlebih dahulu di halaman 'Upload Data'.")
+        st.warning("⚠️ Data yang dinormalisasi tidak ditemukan. Silakan unggah dan normalisasi data terlebih dahulu di halaman **'Upload Data'**.")
         return
-
+    if 'scaler' not in st.session_state or st.session_state.scaler is None:
+        st.warning("⚠️ Objek scaler tidak ditemukan. Pastikan Anda telah menormalisasi data di halaman **'Upload Data'**.")
+        return
+    
+    # Ambil data dari session state
     df_normalized = st.session_state.normalized_data
     
     # Memisahkan fitur (X) dan target (y)
@@ -256,7 +243,19 @@ def show():
             # Melakukan prediksi pada data uji
             y_pred = model.predict(X_test)
             
-            # Simpan model dan data penting ke session state
+            # Simpan SEMUA objek penting ke file tunggal untuk persistensi
+            if not os.path.exists("file"):
+                os.makedirs("file")
+            
+            model_and_metadata = {
+                'model': model,
+                'scaler': st.session_state.scaler, # Ambil scaler dari session state
+                'feature_names': X.columns.tolist(),
+                'class_names': label_encoder.classes_.tolist()
+            }
+            joblib.dump(model_and_metadata, MODEL_SAVE_FILE)
+            
+            # Simpan model dan data penting ke session state untuk sesi saat ini
             st.session_state.model = model
             st.session_state.feature_names = X.columns.tolist()
             st.session_state.label_encoder = label_encoder
@@ -264,16 +263,12 @@ def show():
             st.session_state.model_trained = True
             st.session_state.y_test = y_test
             st.session_state.y_pred = y_pred
-
-            # Simpan model ke file
-            if not os.path.exists("file"):
-                os.makedirs("file")
-            joblib.dump(model, MODEL_FILE)
             
-            st.success("🎉 Model berhasil dilatih dan dievaluasi!")
+            st.success(f"🎉 Model dan Scaler berhasil dilatih, dievaluasi, dan disimpan dalam satu file! Model siap digunakan untuk prediksi.")
+            st.balloons()
             st.rerun()
 
-    if st.session_state.model_trained and st.session_state.y_test is not None:
+    if st.session_state.get('model_trained', False) and st.session_state.get('y_test') is not None:
         model = st.session_state.model
         feature_names = st.session_state.feature_names
         class_names = st.session_state.class_names
@@ -283,15 +278,12 @@ def show():
         # Hitung metrik evaluasi
         accuracy = accuracy_score(y_test, y_pred)
         
-        # --- PERBAIKAN UTAMA DI SINI ---
-        # Menambahkan parameter 'labels' agar fungsi menghitung semua kelas
-        # meskipun beberapa tidak ada di y_test atau y_pred.
         report = classification_report(y_test, y_pred, target_names=class_names, labels=np.arange(len(class_names)), output_dict=True)
         cm = confusion_matrix(y_test, y_pred)
         
         st.markdown("---")
         st.subheader("🌿 Visualisasi Pohon Keputusan")
-        st.info("Pohon ini adalah hasil 'belajar' dari data yang telah diunggah. Gunakan penjelasan di samping untuk membacanya.")
+        st.info("Pohon ini adalah hasil 'belajar' dari data yang Anda unggah. Gunakan penjelasan di samping untuk membacanya.")
         
         col1, col2 = st.columns([2, 1])
         with col1:
@@ -344,14 +336,12 @@ def show():
         st.markdown("#### Laporan Klasifikasi")
         st.info("Tabel di bawah ini menampilkan metrik evaluasi utama seperti precision, recall, dan f1-score untuk setiap kategori.")
         
-        # Mengubah laporan klasifikasi menjadi DataFrame untuk tampilan tabel yang rapi
         report_df = pd.DataFrame(report).transpose()
         st.dataframe(report_df)
 
         st.markdown("#### Matriks Kebingungan (Confusion Matrix)")
         st.info("Matriks ini menunjukkan jumlah prediksi benar dan salah. Angka di diagonal adalah prediksi yang benar.")
 
-        # Menyesuaikan tata letak untuk Confusion Matrix agar tidak terlalu besar
         conf_matrix_col1, conf_matrix_col2, conf_matrix_col3 = st.columns([1, 2, 1])
         with conf_matrix_col2:
             fig, ax = plt.subplots(figsize=(8, 6))
