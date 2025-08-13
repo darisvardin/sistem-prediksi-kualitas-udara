@@ -92,14 +92,14 @@ def explain_tree_visual(class_names):
         for name, color_name, color_hex in col1_items:
             st.markdown(f"""
             <div style="background-color:#{color_hex}1a; padding:10px; border-radius:5px; margin-bottom:10px; border-left: 4px solid #{color_hex};">
-                <p style="margin:0; color:#333;">🟢 **{name}:** Udara <b>{color_name}</b></p>
+                <p style="margin:0; color:#333;">🟢 {name}: <b>{color_name}</b></p>
             </div>
             """, unsafe_allow_html=True)
     with cols[1]:
         for name, color_name, color_hex in col2_items:
             st.markdown(f"""
             <div style="background-color:#{color_hex}1a; padding:10px; border-radius:5px; margin-bottom:10px; border-left: 4px solid #{color_hex};">
-                <p style="margin:0; color:#333;">🟢 **{name}:** Udara <b>{color_name}</b></p>
+                <p style="margin:0; color:#333;">🟢 {name}: <b>{color_name}</b></p>
             </div>
             """, unsafe_allow_html=True)
 
