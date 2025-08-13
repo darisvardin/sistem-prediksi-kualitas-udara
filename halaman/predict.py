@@ -78,7 +78,7 @@ def show():
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("**Polutan Udara**")
-            co = st.number_input("CO (ppm)", min_value=0.0, max_value=10.0, value=co_val, step=0.1, 
+            co = st.number_input("CO (ppm)", min_value=0.0, max_value=10.0, value=co_val, step=0.5, 
                                  help="Karbon Monoksida - Gas beracun dari pembakaran tidak sempurna")
             pm10 = st.number_input("PM10 (µg/m3)", min_value=0.0, max_value=200.0, value=pm10_val, step=5.0, 
                                    help="Partikel debu halus - Partikel udara berdiameter ≤10 mikrometer")
