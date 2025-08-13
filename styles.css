@@ -1,0 +1,344 @@
+/* =================================================================== */
+/* Base Variables & General Styling for Light and Dark Mode */
+/* =================================================================== */
+
+:root {
+    /* Light Mode Colors */
+    --background-color: #f0f2f6;
+    --sidebar-bg-color: #ffffff;
+    --main-text-color: #333333;
+    --secondary-text-color: #757575;
+    --primary-color: #0d47a1; /* Darker blue for headings */
+    --secondary-color: #1976d2; /* Medium blue for subheadings */
+    --card-bg-color: #ffffff;
+    --divider-color: #e0e0e0;
+    --hover-bg-color: #e3f2fd;
+    --active-bg-color: #bbdefb;
+    --border-color: #ccc;
+    --success-color: #4CAF50;
+    --error-color: #f44336;
+    
+    /* New Navigation Colors */
+    --nav-item-color: #424242;
+    --nav-item-hover-bg: #e3f2fd;
+    --nav-item-active-bg: #bbdefb;
+    --nav-item-active-color: #0d47a1;
+    
+    /* Variables for Rule Cards */
+    --color-baik-bg: #e8f5e9;
+    --color-baik-border: #4caf50;
+    --color-baik-text: #1b5e20;
+    
+    --color-sedang-bg: #fff3e0;
+    --color-sedang-border: #ff9800;
+    --color-sedang-text: #e65100;
+    
+    --color-tidak-sehat-bg: #ffebee;
+    --color-tidak-sehat-border: #f44336;
+    --color-tidak-sehat-text: #b71c1c;
+
+    --color-sangat-tidak-sehat-bg: #f3e5f5;
+    --color-sangat-tidak-sehat-border: #ba68c8;
+    --color-sangat-tidak-sehat-text: #4a148c;
+
+    --color-berbahaya-bg: #e0e0e0;
+    --color-berbahaya-border: #212121;
+    --color-berbahaya-text: #212121;
+}
+
+/* Dark Mode Colors - Overrides for prefers-color-scheme: dark */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #121212;
+        --sidebar-bg-color: #1e1e1e;
+        --main-text-color: #e0e0e0;
+        --secondary-text-color: #b0b0b0;
+        --primary-color: #90caf9; /* Light blue for dark mode headings */
+        --secondary-color: #42a5f5; /* Lighter blue for dark mode subheadings */
+        --card-bg-color: #2c2c2c;
+        --divider-color: #424242;
+        --hover-bg-color: #333333;
+        --active-bg-color: #444444;
+        --border-color: #555;
+        --success-color: #81c784;
+        --error-color: #e57373;
+
+        /* New Navigation Colors (Dark Mode) */
+        --nav-item-color: #e0e0e0;
+        --nav-item-hover-bg: #333333;
+        --nav-item-active-bg: #444444;
+        --nav-item-active-color: #90caf9;
+        
+        /* Variables for Rule Cards in Dark Mode */
+        --color-baik-bg: #2d452e;
+        --color-baik-border: #8bc34a;
+        --color-baik-text: #c8e6c9;
+        
+        --color-sedang-bg: #5a441e;
+        --color-sedang-border: #ffb300;
+        --color-sedang-text: #fff8e1;
+        
+        --color-tidak-sehat-bg: #4c2220;
+        --color-tidak-sehat-border: #e53935;
+        --color-tidak-sehat-text: #ffcdd2;
+        
+        --color-sangat-tidak-sehat-bg: #442a4a;
+        --color-sangat-tidak-sehat-border: #ba68c8;
+        --color-sangat-tidak-sehat-text: #f3e5f5;
+        
+        --color-berbahaya-bg: #333333;
+        --color-berbahaya-border: #666666;
+        --color-berbahaya-text: #e0e0e0;
+    }
+}
+
+/* =================================================================== */
+/* General Body and Main Content Styling */
+/* =================================================================== */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--main-text-color);
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 0;
+}
+
+.stApp {
+    background-color: var(--background-color);
+    color: var(--main-text-color);
+}
+
+.main .block-container {
+    padding-top: 2rem;
+    padding-right: 3rem;
+    padding-left: 3rem;
+    padding-bottom: 2rem;
+}
+
+/* Header Styling */
+h1 {
+    color: var(--primary-color);
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+h2 {
+    color: var(--secondary-color);
+    font-weight: 500;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+h3 {
+    color: var(--main-text-color);
+    margin-top: 1.2rem;
+    margin-bottom: 0.8rem;
+}
+
+/* Card Styling */
+.card {
+    background-color: var(--card-bg-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.card h4 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+.card p {
+    margin-bottom: 0;
+}
+
+/* Success/Warning Boxes */
+.success-box {
+    background-color: #d4edda;
+    border-left: 5px solid #28a745;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    color: #155724;
+}
+
+.warning-box {
+    background-color: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    color: #856404;
+}
+
+.danger-box {
+    background-color: #f8d7da;
+    border-left: 5px solid #dc3545;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    color: #721c24;
+}
+
+.critical-box {
+    background-color: #e1bee7;
+    border-left: 5px solid #9c27b0;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    color: #4a148c;
+}
+
+.primary-box {
+    background-color: #e3f2fd;
+    border-left: 5px solid #1976d2;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    color: #0d47a1;
+}
+
+/* =================================================================== */
+/* Sidebar Navigation Styling */
+/* =================================================================== */
+
+[data-testid="stSidebar"] {
+    background-color: var(--sidebar-bg-color);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    padding: 20px;
+}
+
+.sidebar-title {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.sidebar-footer {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+    margin-top: 1rem;
+}
+
+.divider {
+    border: 0;
+    height: 1px;
+    background: var(--divider-color);
+    margin: 1.5rem 0;
+}
+
+.header-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    padding: 40px;
+    border-radius: 15px;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.feature-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* color: #333; */
+}
+
+.feature-card img {
+    max-height: 120px;
+    object-fit: contain;
+    margin: 15px auto;
+}
+
+.tree-explanation {
+    background-color: #e8f5e9;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 25px;
+    border-left: 4px solid var(--success);
+    color: #333;
+}
+
+.prediction-result {
+    text-align: center;
+    padding: 35px;
+    border-radius: 15px;
+    margin: 25px 0;
+    font-size: 1.4rem;
+    color: white;
+}
+
+.good-air {
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+}
+
+.moderate-air {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+}
+
+.bad-air {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+.critical-air {
+    background: linear-gradient(135deg, #b71c1c, #7f0000);
+}
+
+.dangerous-air {
+    background: linear-gradient(135deg, #7b1fa2, #4a148c);
+}
+
+.recommendation-box {
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    color: #333;
+}
+
+/* Form styling */
+.stNumberInput input {
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+/* Flow diagram styling */
+.flow-container {
+    display: flex;
+    justify-content: space-between;
+    margin: 30px 0;
+    position: relative;
+}
+
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .header-gradient {
+        padding: 25px;
+    }
+    
+    .feature-card {
+        margin-bottom: 20px;
+    }
+    
+    .flow-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .flow-step {
+        width: 80%;
+        margin-bottom: 20px;
+    }
+    
+    .flow-arrow {
+        display: none;
+    }
+}
